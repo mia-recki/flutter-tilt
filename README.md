@@ -18,6 +18,7 @@ StreamBuilder<Tilt>(
     samplingRateMs: 20,
     initialTilt: const Tilt(0, 0),
     filterGain: 0.1,
+    devicePlane = 0,
   ).stream,
   builder: (context, snapshot) {
     if (snapshot.hasData && snapshot.data != null) {
@@ -31,6 +32,7 @@ StreamBuilder<Tilt>(
 * `samplingRateMs` determines how often the stream emitts updates. It's recommended to keep this value relatively small (i.e., update frequently), otherwise the complementary filter won't be able to correct the tilt values as accurately.
 * `initialTilt` can be optionally provided, in case you know the exact tilt of the device when you subscribe to the stream. Even if incorrectly assuming (0, 0) as the initial tilt, which is the default behavior, the values will correct themselves over time, thanks to accelerometer data.
 * `filterGain` determines the proportion of gyroscope and accelerometer data present in the final result. If set to `0`, the final estimate is based solely on accelerometer data, while a value of `1` would mean that only gyroscope data determines the tilt. Neither of these extremes are recommended.
+* `devicePlane` Device standing up side(Portrait) or device parallel to ground(landscape)/device screen facing sky. 0 == parallel to the ground, device screen facing sky. 1 == standing upward, top of the device is up. Default value is 0.
 
 # What about yaw?
 

@@ -21,12 +21,20 @@ class DeviceTilt {
   /// Emits current [Tilt] every [samplingRateMs] milliseconds.
   late final Stream<Tilt> stream;
 
+  /// Describes the device's position.
+  /// Device standing up side(Portrait) or device parallel to ground(landscape), device screen facing sky.
+  /// 0 == parallel to the ground, device screen facing sky.
+  /// 1 == standing upward, top of the device is up.
+  /// Default value is 0.
+  final int devicePlane;
+
   late Tilt _tilt;
 
   DeviceTilt({
     this.samplingRateMs = 20,
     this.initialTilt = const Tilt(0, 0),
     this.filterGain = 0.1,
+    this.devicePlane = 0,
     Stream<GyroscopeEvent>? gyroscope,
     Stream<AccelerometerEvent>? accelerometer,
   }) : assert(
@@ -34,9 +42,9 @@ class DeviceTilt {
           'filterGain must be a valu between 0 and 1, current value is $filterGain',
         ) {
     _tilt = initialTilt;
-    stream = (gyroscope ?? gyroscopeEvents)
+    stream = (gyroscope ?? gyroscopeEventStream())
         .combineLatest(
-            (accelerometer ?? accelerometerEvents), (p0, p1) => [p0, p1])
+            (accelerometer ?? accelerometerEventStream()), (p0, p1) => [p0, p1])
         .buffer(Stream.periodic(Duration(milliseconds: samplingRateMs)))
         .map(
       (listOfPairs) {
@@ -57,13 +65,20 @@ class DeviceTilt {
         final y = _tilt.yRadian + g.y / (1000 / samplingRateMs);
 
         // tilt from accelerometer
-        final roll = atan2(a.y, a.z);
-        final pitch = atan2(-a.x, a.z);
+        double roll = 0;
+        double pitch = 0;
+        if (devicePlane == 0) {
+          pitch = atan2(a.y, a.z);
+          roll = atan2(-a.x, a.z);
+        } else if (devicePlane == 1) {
+          pitch = atan2(a.y, a.z);
+          roll = atan2(-a.x, sqrt(a.y * a.y + a.z * a.z));
+        }
 
         // complemetary filtered tilt
         _tilt = Tilt(
-          x * (1 - filterGain) + roll * filterGain,
-          y * (1 - filterGain) + pitch * filterGain,
+          x * (1 - filterGain) + pitch * filterGain,
+          y * (1 - filterGain) + roll * filterGain,
         );
         return _tilt;
       },
