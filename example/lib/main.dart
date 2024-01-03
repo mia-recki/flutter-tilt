@@ -21,6 +21,8 @@ class MyApp extends StatelessWidget {
               samplingRateMs: 20,
               initialTilt: const Tilt(0, 0),
               filterGain: 0.1,
+              devicePlane:
+                  0, // change this value to 0 or 1 to get correct tilt in your device plane.
             ).stream,
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data != null) {
